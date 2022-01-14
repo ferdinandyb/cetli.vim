@@ -7,10 +7,9 @@ Designed around using pandoc markdown and
 
 
 ```
-σχίδη (gr.) -> cedula (l.) -> zedel (ger.) -> Zettel (ger.)
-                 |                              |
-                 ˇ                              ˇ
-               cédula (hu.)                   cetli (hu.)
+σχίδη (gr.) → cedula (l.) → zedel (ger.) → Zettel (ger.)
+                 ↓                              ↓
+              cédula (hu.)                 cetli (hu.)
 ```
 shortened etymology from [wikitionary](https://en.wiktionary.org/wiki/cetli)
 
