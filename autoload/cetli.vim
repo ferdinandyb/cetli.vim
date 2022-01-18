@@ -1,9 +1,9 @@
 let s:cpo_save = &cpo
 set cpo&vim
 
-function! cetli#count_files(pattern)
-  let filelist = split(globpath(g:cetli_directory, a:pattern), '\n')
-  return len(filelist)
+function! cetli#count_files(pattern, dirpath)
+  let l:filelist = split(globpath(a:dirpath, a:pattern), '\n')
+  return len(l:filelist)
 endfunction
 
 
@@ -14,17 +14,17 @@ function! cetli#numtoletter(num)
     if (a:num == 0)
         return ""
     endif
-    let numletter = strlen(cetli#letters)
-    let charindex = a:num % numletter
-    let quotient = a:num / numletter
+    let l:numletter = strlen(cetli#letters)
+    let l:charindex = a:num % l:numletter
+    let l:quotient = a:num / l:numletter
     if (charindex-1 == -1)
-      let charindex = numletter
-      let quotient = quotient - 1
+      let l:charindex = l:numletter
+      let l:quotient = l:quotient - 1
     endif
 
-    let result =  strpart(cetli#letters, charindex - 1, 1)
-    if (quotient>=1)
-      return cetli#numtoletter(float2nr(quotient)) . result
+    let l:result =  strpart(cetli#letters, charindex - 1, 1)
+    if (l:quotient>=1)
+      return cetli#numtoletter(float2nr(l:quotient)) . l:result
     endif
     return result
 endfunction
@@ -33,35 +33,52 @@ function! cetli#date_to_name(date)
    return a:date
 endfunction
 
+function! cetli#parse_titletags(arguments)
+    let l:tags = join(filter(split(a:arguments," "),'v:val =~ "^#" '), ", ")
+    let l:title = join(filter(split(a:arguments," "),'v:val !~ "^#" '), " ")
+    return [l:title, l:tags]
+endfunction
 
-function! cetli#new(...)
-
-    let cetli_date = strftime(g:cetli_date_format)
-    let filename = strptime(g:cetli_date_format,cetli_date)
-    let filename = strftime(g:cetli_filename_date_format,filename)
-    let file_count = cetli#count_files(filename . '*.md')
-    let filename = filename . cetli#numtoletter(file_count) . ".md"
-    let filename = g:cetli_directory . filename
-    if (a:0 > 0)
-        let cetli_title = a:1
+function! cetli#new(fecni,...)
+    if a:fecni
+        let l:dirpath = g:fecni_directory
     else
-        let cetli_title = ''
+        let l:dirpath = g:cetli_directory
+    endif
+    let l:cetli_date = strftime(g:cetli_date_format)
+    let l:filename = strptime(g:cetli_date_format,cetli_date)
+    let l:filename = strftime(g:cetli_filename_date_format,filename)
+    let l:file_count = cetli#count_files(filename . '*.md', l:dirpath)
+    let l:filename = l:filename . cetli#numtoletter(l:file_count) . ".md"
+    let l:filename = l:dirpath . l:filename
+    if (a:0 > 0)
+        let l:result = cetli#parse_titletags(a:1)
+        let l:cetli_title = l:result[0]
+        let l:cetli_tags = " " . l:result[1]
+        echom
+    else
+        let l:cetli_title = ''
+        let l:cetli_tags = ''
     endif
 
-    let lines = [ '---',
-                \ 'title: ' . cetli_title,
-                \ 'date: ' . cetli_date,
-                \ 'tags:',
-                \ '---' ]
+    let l:lines = [ '---',
+                \ 'title: ' . l:cetli_title,
+                \ 'date: ' . l:cetli_date,
+                \ 'tags:'. l:cetli_tags]
+    if a:fecni
+        let l:lines = l:lines + ["type":]
+    endif
+
+    let l:lines = l:lines + [ '---' ]
     execute "e " filename
     call append(0, lines)
 
 endfunction
 
 function! cetli#parse_to_markdown_link(line)
-    let filepath = split(a:line,":")[0]
-    let filename = fnamemodify(filepath,":r")
-    return "[" . filename . "](" . filepath . ")"
+    let l:filepath = split(a:line,":")[0]
+    let l:filename = fnamemodify(l:filepath,":r")
+    return "[" .l:filename . "](" . l:filepath . ")"
 endfunction
 
 function! cetli#parse_multiple_to_markdown_link(key, line)
@@ -72,15 +89,15 @@ function! cetli#find_linkmode(lines)
    if (len(a:lines) == 1)
        execute 'normal! a' . s:parse_to_markdown_link(a:lines[0])
    else
-       let lines = [""] + map(a:lines,function('cetli#parse_multiple_to_markdown_link'))
+       let l:lines = [""] + map(a:lines,function('cetli#parse_multiple_to_markdown_link'))
        call append('.',lines)
    endif
 endfunction
 
 function! cetli#rg_to_qf(line)
-    let parts = split(a:line, ':')
-    return {'filename': parts[0], 'lnum': parts[1], 'col': parts[2],
-          \ 'text': join(parts[3:], ':')}
+    let l:parts = split(a:line, ':')
+    return {'filename': l:parts[0], 'lnum': l:parts[1], 'col': l:parts[2],
+          \ 'text': join(l:parts[3:], ':')}
 endfunction
 
 function! cetli#escape(path)
@@ -88,11 +105,11 @@ function! cetli#escape(path)
 endfunction
 
 function! cetli#find_openmode(lines)
-    let list = map(a:lines, 'cetli#rg_to_qf(v:val)')
-    let first = list[0]
+    let l:list = map(a:lines, 'cetli#rg_to_qf(v:val)')
+    let l:first = list[0]
     execute 'e ' . cetli#escape(first.filename)
-    execute first.lnum
-    execute 'normal!' first.col.'|zz'
+    execute l:first.lnum
+    execute 'normal!' l:first.col.'|zz'
 
     if len(list) > 1
       call setqflist(list)
