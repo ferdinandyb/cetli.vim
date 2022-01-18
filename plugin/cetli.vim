@@ -4,7 +4,7 @@ endif
 
 let cetlivim_loaded = 1
 
-command! -bang -nargs=? -complete=dir CetliFind
+command! -bang -nargs=? -complete=dir CetliSearch
     \ call fzf#run(fzf#wrap('cetlifind',
     \ { 'dir': g:cetli_directory,
     \ 'source': 'rg "\S" --type markdown --color=always --smart-case --vimgrep',
