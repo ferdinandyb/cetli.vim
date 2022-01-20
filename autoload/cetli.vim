@@ -64,12 +64,9 @@ function! cetli#new(fecni,...)
     let l:lines = [ '---',
                 \ 'title: ' . l:cetli_title,
                 \ 'date: ' . l:cetli_date,
-                \ 'tags:'. l:cetli_tags]
-    if a:fecni
-        let l:lines = l:lines + ["type":]
-    endif
+                \ 'tags:'. l:cetli_tags,
+                \ '---']
 
-    let l:lines = l:lines + [ '---' ]
     execute "e " filename
     call append(0, lines)
 
