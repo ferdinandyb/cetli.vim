@@ -36,36 +36,46 @@ endfunction
 function! cetli#parse_titletags(arguments)
     let l:tags = join(filter(split(a:arguments," "),'v:val =~ "^#" '), ", ")
     let l:title = join(filter(split(a:arguments," "),'v:val !~ "^#" '), " ")
-    return [l:title, l:tags]
+    let l:type = split(join(filter(split(l:title," "),'v:val =~ "^type:"'), " "),"type:")
+    if len(l:type) > 0
+        let l:type = l:type[0]
+    else
+        let l:type = 0
+    endif
+    let l:title = join(filter(split(l:title," "),'v:val !~ "^type:"'), " ")
+    return [l:title, l:tags, l:type]
 endfunction
 
-function! cetli#new(fecni,...)
-    if a:fecni
-        let l:dirpath = g:fecni_directory
-    else
-        let l:dirpath = g:cetli_directory
-    endif
+function! cetli#new(dirpath, default_type,...)
     let l:cetli_date = strftime(g:cetli_date_format)
     let l:filename = strptime(g:cetli_date_format,cetli_date)
     let l:filename = strftime(g:cetli_filename_date_format,filename)
-    let l:file_count = cetli#count_files(filename . '*.md', l:dirpath)
+    let l:file_count = cetli#count_files(filename . '*.md', a:dirpath)
     let l:filename = l:filename . cetli#numtoletter(l:file_count) . ".md"
-    let l:filename = l:dirpath . l:filename
     if (a:0 > 0)
         let l:result = cetli#parse_titletags(a:1)
+        echom l:result
         let l:cetli_title = l:result[0]
         let l:cetli_tags = " " . l:result[1]
+        if len(l:result[2]) == 1
+            let l:cetli_type = a:default_type
+        else
+            let l:cetli_type = " " . l:result[2]
+        endif
         echom
     else
         let l:cetli_title = ''
         let l:cetli_tags = ''
+        let l:cetli_type = a:default_type
     endif
 
     let l:lines = [ '---',
                 \ 'title: ' . l:cetli_title,
                 \ 'date: ' . l:cetli_date,
                 \ 'tags:'. l:cetli_tags,
+                \ 'type:'. l:cetli_type,
                 \ '---']
+    let l:filename = a:dirpath . l:filename
 
     execute "e " filename
     call append(0, lines)
@@ -122,6 +132,20 @@ function! cetli#find_sink(lines)
         call cetli#find_openmode(a:lines[1:])
     endif
 endfunction
+
+function! cetli#fzf_search(prefix,path, bang)
+    echom a:bang
+    call fzf#run(fzf#wrap(a:prefix . 'find',
+    \ { 'dir': a:path,
+    \ 'source': 'rg "\S" --type markdown --color=always --smart-case --vimgrep',
+    \ 'options': '--expect=ctrl-' . g:cetli_fzf_insert_link_ctrl . '
+                \ --multi
+                \ --ansi --delimiter=":"
+                \ --preview="bat --style=plain --color=always {1}"',
+    \ 'sink*': function('cetli#find_sink')
+    \}, a:bang))
+endfunction
+
 
 let &cpo = s:cpo_save
 unlet s:cpo_save

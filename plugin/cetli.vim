@@ -4,17 +4,17 @@ endif
 
 let cetlivim_loaded = 1
 
-command! -bang -nargs=? -complete=dir CetliSearch
-    \ call fzf#run(fzf#wrap('cetlifind',
-    \ { 'dir': g:cetli_directory,
-    \ 'source': 'rg "\S" --type markdown --color=always --smart-case --vimgrep',
-    \ 'options': '--expect=ctrl-' . g:cetli_fzf_insert_link_ctrl . '
-                \ --multi
-                \ --ansi --delimiter=":"
-                \ --preview="bat --style=plain --color=always {1}"',
-    \ 'sink*': function('cetli#find_sink')
-    \}, <bang>0))
+function! s:create_new_command(config)
+    execute 'command! -bang -nargs=? ' . a:config.prefix . 'New call cetli#new("' . a:config.path .'","' a:config.default_type '", <q-args>)'
+endfunction
 
+function! s:create_search_command(config)
+    execute 'command! -bang -nargs=? -complete=dir ' a:config.prefix . 'Search call cetli#fzf_search("' . a:config.prefix . '","' . a:config.path . '", <bang>0)'
+endfunction
 
-command! -bang -nargs=? CetliNew call cetli#new(0, <q-args>)
-command! -bang -nargs=? FecniNew call cetli#new(1, <q-args>)
+for config in g:cetli_configuration
+    if config.naming != "manual"
+        call s:create_new_command(config)
+    endif
+    call s:create_search_command(config)
+endfor
