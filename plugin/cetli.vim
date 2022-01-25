@@ -9,12 +9,16 @@ function! s:create_new_command(config)
 endfunction
 
 function! s:create_search_command(config)
-    execute 'command! -bang -nargs=? -complete=dir ' a:config.prefix . 'Search call cetli#fzf_search("' . a:config.prefix . '","' . a:config.path . '", <bang>0)'
+    execute 'command! -bang -nargs=? -complete=dir ' a:config.prefix . 'Search call cetli#fzf_search("' . a:config.prefix . '","' . a:config.path . '", <bang>0, <q-args>)'
 endfunction
 
+let s:all_paths = []
 for config in g:cetli_configuration
     if config.naming != "manual"
         call s:create_new_command(config)
     endif
     call s:create_search_command(config)
+    let s:all_paths = s:all_paths + [config.path]
 endfor
+
+execute 'command! -bang -nargs=? -complete=dir '. g:cetli_searchall_prefix . 'SearchAll call cetli#fzf_search("'. g:cetli_searchall_prefix . '","' . g:cetli_searchall_executedir .'", <bang>0, <q-args>)'

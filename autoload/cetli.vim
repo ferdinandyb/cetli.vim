@@ -133,11 +133,23 @@ function! cetli#find_sink(lines)
     endif
 endfunction
 
-function! cetli#fzf_search(prefix,path, bang)
-    echom a:bang
-    call fzf#run(fzf#wrap(a:prefix . 'find',
-    \ { 'dir': a:path,
-    \ 'source': 'rg "\S" --type markdown --color=always --smart-case --vimgrep',
+function! cetli#fzf_search(prefix, path, bang, searchargs)
+    call fzf#run(fzf#wrap(a:prefix . 'find', {
+        \ 'dir': a:path,
+        \ 'source': join([
+                   \ 'rg',
+                   \ '--follow',
+                   \ '--smart-case',
+                   \ '--line-number',
+                   \ '--color never',
+                   \ '--no-messages',
+                   \ '--no-heading',
+                   \ '--with-filename',
+                   \ ((a:searchargs is '') ?
+                     \ '"\S"' :
+                     \ shellescape(a:searchargs)),
+                   \ '2>' . '/dev/null'
+                   \ ]),
     \ 'options': '--expect=ctrl-' . g:cetli_fzf_insert_link_ctrl . '
                 \ --multi
                 \ --ansi --delimiter=":"
