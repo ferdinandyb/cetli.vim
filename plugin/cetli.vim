@@ -22,3 +22,5 @@ for config in g:cetli_configuration
 endfor
 
 execute 'command! -bang -nargs=? -complete=dir '. g:cetli_searchall_prefix . 'SearchAll call cetli#fzf_search("'. g:cetli_searchall_prefix . '","' . g:cetli_searchall_executedir .'", <bang>0, <q-args>)'
+
+command! -nargs=? CetliInsertHeader call cetli#insert_header(<q-args>)

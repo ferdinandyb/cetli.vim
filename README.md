@@ -21,3 +21,7 @@ Michal Hoftich's [vim-zettel](https://github.com/michal-h21/vim-zettel) was
 pretty awesome, I copied quite a few things from there, but because it is
 a vimwiki add-on it was too heavy for me, with baggage from the vimwiki syntax
 carried over to markdown.
+
+[notational-fzf-vim](https://github.com/alok/notational-fzf-vim) powers much of
+the search, but I needed the ability for separate search commands for separate
+folders.

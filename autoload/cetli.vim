@@ -34,7 +34,7 @@ function! cetli#date_to_name(date)
 endfunction
 
 function! cetli#parse_titletags(arguments)
-    let l:tags = join(filter(split(a:arguments," "),'v:val =~ "^#" '), ", ")
+    let l:tags = join(filter(split(a:arguments," "),'v:val =~ "^#" '), " ")
     let l:title = join(filter(split(a:arguments," "),'v:val !~ "^#" '), " ")
     let l:type = split(join(filter(split(l:title," "),'v:val =~ "^type:"'), " "),"type:")
     if len(l:type) > 0
@@ -46,15 +46,9 @@ function! cetli#parse_titletags(arguments)
     return [l:title, l:tags, l:type]
 endfunction
 
-function! cetli#new(dirpath, default_type,...)
-    let l:cetli_date = strftime(g:cetli_date_format)
-    let l:filename = strptime(g:cetli_date_format,cetli_date)
-    let l:filename = strftime(g:cetli_filename_date_format,filename)
-    let l:file_count = cetli#count_files(filename . '*.md', a:dirpath)
-    let l:filename = l:filename . cetli#numtoletter(l:file_count) . ".md"
+function! cetli#setup_header(cetli_date, default_type, ...)
     if (a:0 > 0)
-        let l:result = cetli#parse_titletags(a:1)
-        echom l:result
+        let l:result = cetli#parse_titletags(a:1[0])
         let l:cetli_title = l:result[0]
         let l:cetli_tags = " " . l:result[1]
         if len(l:result[2]) == 1
@@ -62,7 +56,6 @@ function! cetli#new(dirpath, default_type,...)
         else
             let l:cetli_type = " " . l:result[2]
         endif
-        echom
     else
         let l:cetli_title = ''
         let l:cetli_tags = ''
@@ -71,15 +64,29 @@ function! cetli#new(dirpath, default_type,...)
 
     let l:lines = [ '---',
                 \ 'title: ' . l:cetli_title,
-                \ 'date: ' . l:cetli_date,
+                \ 'date: ' . a:cetli_date,
                 \ 'tags:'. l:cetli_tags,
                 \ 'type:'. l:cetli_type,
                 \ '---']
-    let l:filename = a:dirpath . l:filename
+    return l:lines
+endfunction
 
+function! cetli#new(dirpath, default_type,...)
+    let l:cetli_date = strftime(g:cetli_date_format)
+    let l:filename = strptime(g:cetli_date_format,cetli_date)
+    let l:filename = strftime(g:cetli_filename_date_format,filename)
+    let l:file_count = cetli#count_files(filename . '*.md', a:dirpath)
+    let l:filename = l:filename . cetli#numtoletter(l:file_count) . ".md"
+    let l:filename = a:dirpath . l:filename
+    let l:lines = cetli#setup_header(l:cetli_date,a:default_type,a:000)
     execute "e " filename
     call append(0, lines)
+endfunction
 
+function! cetli#insert_header(...)
+    let l:cetli_date = strftime(g:cetli_date_format)
+    let l:lines = cetli#setup_header(l:cetli_date,"",a:000)
+    call append(0, lines)
 endfunction
 
 function! cetli#parse_to_markdown_link(line)
